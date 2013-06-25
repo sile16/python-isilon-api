@@ -100,7 +100,7 @@ class Namespace(object):
                 self.session.connect_SSH()
                 
             try:    
-                stdin, stdout, stderr = self.ssh.exec_command("cp -c \"%s\" \"%s\"" % (src_path,dst_path) )
+                stdin, stdout, stderr = self.session.ssh.exec_command("cp -c \"%s\" \"%s\"" % (src_path,dst_path) )
                 #Read output stream to wait for command completion
                 stdout.read()
             except paramiko.SSHException, e:
