@@ -18,18 +18,18 @@ Paramiko 1.10.1 (SSH support in order to do file clones)
 
 API Features
 ============
-Automatic Session/Connection management
-Effecient resuse of HTTP connections
-Automatic handling of paged directory listing using resume tokens
-Some basic error handling of sessions
+##Automatic Session/Connection management
+##Effecient resuse of HTTP connections
+##Automatic handling of paged directory listing using resume tokens
+##Some basic error handling of sessions
 
 cp.py Features
 ==============
-Copies or clones a source directory to a target directory
-Multithreaded Copy Tool
-Intelligently connects to multiple nodes in the cluster
-applies ACLs to target files
-Can run a seperate verify only job to compare ACLS
+##Copies or clones a source directory to a target directory
+##Multithreaded Copy Tool
+##Intelligently connects to multiple nodes in the cluster
+##applies ACLs to target files
+##Can run a seperate verify only job to compare ACLS
 
 
 
