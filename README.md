@@ -1,4 +1,4 @@
-python-Isilon-API
+python-isilon-api
 =================
 
 An unofficial python library to make Isilon API calls. This library is incomplete, 
