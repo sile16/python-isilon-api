@@ -2,11 +2,12 @@ python-Isilon-API
 =================
 
 An unofficial python library to make Isilon API calls. This library is incomplete, 
-not fully tested, and not supported by EMC.
+not fully tested, and not supported by EMC. I only plan to fill in the features as 
+I need them.  Use at your own risk.
 
 This is a library I created in order to make a copy tool with the goal 
 of learning the API.  That said, it does work in my environment and
-may be useful to others working with the API.
+may be useful to others working with the API. 
 
 ####Tested with:
 
