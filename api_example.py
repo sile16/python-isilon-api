@@ -16,8 +16,12 @@ logging.getLogger().setLevel(logging.INFO)
 logging.captureWarnings(True)
 
 
-#connect
-api = isilon.API(fqdn, username, password)
+#connect, secure=False allows us to bypass the CA validation
+api = isilon.API(fqdn, username, password, secure=False)
+
+#not necessary as it will connect automatically on auth failure
+#but this avoids the initial attempt failure
+api.session.connect()
 
 #Check for old bad snaps and delete
 try:
@@ -28,7 +32,7 @@ except isilon.ObjectNotFound:
     pass
 
 
-#More Error handling examples
+#More Error handling example
 try:
     api.platform.snap_create('testsnap','/ifs/data/test')
     

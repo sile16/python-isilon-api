@@ -13,21 +13,25 @@ class Session(object):
 
     '''Implements higher level functionality to interface with an Isilon cluster'''
 
-    def __init__(self, fqdn, username, password, services):
+    def __init__(self, fqdn, username, password, secure=True, port = 8080, services=('namespace','platform')):
         self.log = logging.getLogger(__name__)
         self.log.addHandler(logging.NullHandler())
         self.ip = socket.gethostbyname(fqdn)
-        self.url= "https://" + self.ip + ':8080'
-        self.session_url = self.url + '/session/1/session'
-
+        self.port = port
         self.username = username
         self.password = password
         self.services = services
+        self.url= "https://" + self.ip + ':' + str(port)
+        self.session_url = self.url + '/session/1/session'
+        
+        #disable invalid security certificate warnings
+        if(not secure):
+            requests.packages.urllib3.disable_warnings()
         
         #Create HTTPS Requests session object
         self.s = requests.Session()
         self.s.headers.update({'content-type': 'application/json'})
-        self.s.verify = False
+        self.s.verify = secure
         
         #initialize session timeout values
         self.timeout = 0
@@ -54,12 +58,14 @@ class Session(object):
         #check to see if there is a valid session 
         if time.time() > self.timeout:
             self.connect()        
-
+        
+        #incoming API call uses a relative path
         url = self.url + url
-        print url
+        
         if len(url) > 8198:      
             self.log.exception("URL Length too long: %s", url)
         
+        #make actual API call
         r = self.s.request(method,url,**kwargs)
                  
         #check for authorization issue and retry if we just need to create a new session
@@ -82,11 +88,18 @@ class Session(object):
         
         self.log_api_call(r,logging.DEBUG)
         self.r = r
+        
+        #if type json lets return the json directly
+        if 'content-type' in r.headers:
+            if 'application/json' == r.headers['content-type']:
+                return r.json()
+        
         return r
             
             
             
     def api_call_resumeable(self,object_name,method,url,**kwargs):
+        ''' Returns a generator, lists through all objects even if it requires multiple API calls '''
         #initialize state for resuming    
         last_page = False
         resume=None
@@ -104,8 +117,7 @@ class Session(object):
                 kwargs['params']['resume'] = resume
             
             #Make API Call
-            r = self.api_call(method, url, **kwargs)
-            data = r.json()
+            data = self.api_call(method, url, **kwargs)
         
             #Check for a resume token for mutliple pages of results
             if 'resume' in data:

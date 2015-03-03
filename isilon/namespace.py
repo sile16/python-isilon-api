@@ -20,21 +20,18 @@ class Namespace(object):
         #initialize session timeout values
         self.timeout = 0
     
-    def api_call(self,*args,**kwargs):
+    def api_call(self,method, url,**kwargs):
         '''add the namespace prefix to the api call'''
-        newargs = list(args) 
-        newargs[1] = self.namespace_url + newargs[1]
-        return self.session.api_call(*tuple(newargs),**kwargs)
+        return self.session.api_call(method, self.namespace_url + url,**kwargs)
         
-    def api_call_resumeable(self,*args,**kwargs):
+    def api_call_resumeable(self,object_name,method,url,**kwargs):
         '''add the namespace prefix to the api call'''
-        newargs = list(args) 
-        newargs[2] = self.namespace_url + newargs[2]
-        return self.session.api_call_resumeable(*tuple(newargs),**kwargs)
+        return self.session.api_call_resumeable(object_name,method,self.namespace_url + url,**kwargs)
            
     def accesspoint(self):
         r = self.api_call("GET", "")
-        data = r.json()['namespaces']
+        
+        data = r['namespaces']
         
         #move all the name, value pairs into an actual dictionary for easy use.
         results = {}
@@ -63,8 +60,7 @@ class Namespace(object):
         options = "?acl"
         if nsaccess:
             options += "&nsaccess=true"
-        r = self.api_call("GET", path + options)
-        return r.json()
+        return self.api_call("GET", path + options)
 
     def acl_set(self,path,acls,nsaccess=False):
         '''set acl'''
@@ -79,8 +75,7 @@ class Namespace(object):
         '''get metadata'''        
         options = "?metadata"
         
-        r = self.api_call("GET", path + options)
-        data = r.json()
+        data = self.api_call("GET", path + options)
         if not 'attrs' in data:
             return None
         data = data['attrs']
@@ -100,25 +95,17 @@ class Namespace(object):
         '''Copy a file''' 
         options=""
         if clone:
-            #We have to use SSH until they add it into the Api
             options="clone=true"
-            
-            
+                
         else:
             #Do a full file copy
             headers = { "x-isi-ifs-copy-source" :  "/namespace" + src_path }
             
-            r = self.api_call("PUT", self.namespace_url + dst_path + options, headers=headers)
-
-
-    def resumeable():
-        print("hi")
+        r = self.api_call("PUT", self.namespace_url + dst_path + options, headers=headers)
 
 
     def dir(self,path):
-        '''Get directory listing'''
-     
-        
+        '''Get directory listing'''        
         for item in self.api_call_resumeable("children","GET", path,params={'detail':'type'}):
             yield item
         
