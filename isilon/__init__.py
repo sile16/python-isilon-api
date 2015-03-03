@@ -2,7 +2,7 @@ import session
 import namespace
 import platform
 
-from .exceptions import ObjectNotFound, APIError, ConnectionError
+from .exceptions import ObjectNotFound, APIError, ConnectionError, IsilonLibraryError
 
 class API(object):
 

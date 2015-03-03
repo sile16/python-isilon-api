@@ -3,7 +3,7 @@ import logging
 import time
 from pprint import pprint
 
-from .exceptions import ( ObjectNotFound )
+from .exceptions import ( ObjectNotFound, IsilonLibraryError )
 
 
 
@@ -19,6 +19,12 @@ class Namespace(object):
                   
         #initialize session timeout values
         self.timeout = 0
+
+    def _override(self,params,overrides):
+        '''copy overrides into params dict, so user can specify additional params not specifically layed out'''
+        for (k,v) in overrides.items():
+            params[k] = v
+        return params
     
     def api_call(self,method, url,**kwargs):
         '''add the namespace prefix to the api call'''
@@ -93,25 +99,23 @@ class Namespace(object):
                     
     def file_copy(self,src_path, dst_path, clone=False):
         '''Copy a file''' 
-        options=""
-        if clone:
-            options="clone=true"
-                
-        else:
-            #Do a full file copy
-            headers = { "x-isi-ifs-copy-source" :  "/namespace" + src_path }
-            
-        r = self.api_call("PUT", self.namespace_url + dst_path + options, headers=headers)
+        options={'clone' : clone}
+        headers = { "x-isi-ifs-copy-source" :  "/namespace" + src_path }    
+        return self.api_call("PUT", self.namespace_url + dst_path, params=options, headers=headers)
+        
+    def file_create(self, path, data, overwrite=False ):
+        '''Uploads a file '''
+        headers = { "x-isi-ifs-target-type" : "object" }  
+        return self.api_call("PUT", path , data=data, headers=headers)
+    
 
-
-    def dir(self,path):
-        '''Get directory listing'''        
-        for item in self.api_call_resumeable("children","GET", path,params={'detail':'type'}):
+    def dir(self,path,**kwargs):
+        '''Get directory listing'''
+        params = self._override({'detail':'type'},kwargs)        
+        for item in self.api_call_resumeable("children","GET", path,params=params):
             yield item
         
-        return
-        
-        
+        return   
         
     def is_dir(self,path):
         metadata = self.metadata(path)
@@ -123,16 +127,14 @@ class Namespace(object):
     def dir_create(self,path,recursive=True):
         '''Create a new directory'''  
         headers = { "x-isi-ifs-target-type" : "container" }   
-        options=""
-        if(recursive):
-            options = "?recursive=true"    
-        r = self.api_call("PUT", self.namespace_url + path + options, headers=headers)
+        options={'recursive' : recursive }
+        r = self.api_call("PUT", path, params=options, headers=headers)
     
     
     def dir_delete(self,path):
         '''delete a directory'''  
         options=""
-        r = self.api_call("DELETE", self.namespace_url + path + options)
+        r = self.api_call("DELETE", path + options)
 
  
         

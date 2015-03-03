@@ -110,11 +110,12 @@ class Session(object):
             #if we have a resume token we need to add it to our params
             if resume != None:
                 #If the params key doesn't exist we need to create it.
-                if not 'params' in kwargs:
-                    kwargs['params'] = {}
+                #if not 'params' in kwargs:
+                #    kwargs['params'] = {}
                 
-                #Set the resume token    
-                kwargs['params']['resume'] = resume
+                #Set the resume token, 
+                #we can overwrite all other params as resume is the only one needed 
+                kwargs['params'] = {'resume': resume }
             
             #Make API Call
             data = self.api_call(method, url, **kwargs)
