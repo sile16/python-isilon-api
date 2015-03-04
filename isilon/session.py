@@ -54,7 +54,7 @@ class Session(object):
             self.log_api_call(self.r,logging.ERROR)
 
     def api_call(self,method,url,**kwargs):
-    	
+        
         #check to see if there is a valid session 
         if time.time() > self.timeout:
             self.connect()        
@@ -67,6 +67,7 @@ class Session(object):
         
         #make actual API call
         r = self.s.request(method,url,**kwargs)
+        self.r = r
                  
         #check for authorization issue and retry if we just need to create a new session
         if r.status_code == 401:
@@ -74,9 +75,11 @@ class Session(object):
             logging.info("Authentication Failure, trying to reconnect session")
             self.connect()
             r = self.s.request(method,url,**kwargs)
+            self.r = r
         
         
         if r.status_code == 404:      
+            self.log_api_call(r,logging.INFO)
             raise ObjectNotFound()
         elif r.status_code == 401:
             self.log_api_call(r,logging.ERROR)
@@ -85,9 +88,9 @@ class Session(object):
             self.log_api_call(r,logging.ERROR)
             message = "API Error: %s" % r.text
             raise APIError(message)
+        else:
+            self.log_api_call(r,logging.DEBUG)
         
-        self.log_api_call(r,logging.DEBUG)
-        self.r = r
         
         #if type json lets return the json directly
         if 'content-type' in r.headers:
@@ -106,31 +109,29 @@ class Session(object):
         
         #We will loop through as many api calls as needed to retrieve all items
         while not last_page:
-            
             #if we have a resume token we need to add it to our params
             if resume != None:
-                #If the params key doesn't exist we need to create it.
-                #if not 'params' in kwargs:
-                #    kwargs['params'] = {}
-                
-                #Set the resume token, 
                 #we can overwrite all other params as resume is the only one needed 
                 kwargs['params'] = {'resume': resume }
             
             #Make API Call
-            data = self.api_call(method, url, **kwargs)
-        
-            #Check for a resume token for mutliple pages of results
+            try:
+            	data = self.api_call(method, url, **kwargs)
+            except ObjectNotFound:
+            	return
+                
+            #Check for a resume token and make sure it's not None
+            last_page=True
             if 'resume' in data:
                 resume = data['resume']
-                last_page = False
-            else:
-            	last_page = True
+                if resume:
+                    last_page=False
+            
 
             if object_name in data:    
                 for obj in data[object_name]:
                     yield obj
-            
+                        
         return
       
 
