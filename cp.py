@@ -122,7 +122,7 @@ def main():
     logging.info(args)
     
     #Initialize an api instance for platform api commands
-    api = isilon.API(args.url,args.username,args.password)
+    api = isilon.API(args.url,args.username,args.password,secure=False)
     
     #make sure the paths provided map to an available access point
     src_ap = args.src.split('/')[1]
@@ -163,13 +163,13 @@ def main():
     
     #Check for old bad snaps and delete
     try:
-        api.platform.snap(temp_snap)
-        api.platform.snap_delete(temp_snap)
+        api.platform.snapshot(temp_snap)
+        api.platform.snapshot_delete(temp_snap)
     except isilon.ObjectNotFound:
         pass
         
     #Create new snap
-    api.platform.snap_create(temp_snap, args.src)
+    api.platform.snapshot_create(temp_snap, args.src)
     
     #Put the first folder into the queue
     queue = Queue.Queue()
@@ -202,7 +202,7 @@ def main():
     queue.join()
     
     #Clean up snapshot
-    api.platform.snap_delete(temp_snap)
+    api.platform.snapshot_delete(temp_snap)
     
     
     #sum all our stats form all threads
