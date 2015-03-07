@@ -48,7 +48,7 @@ class Namespace(object):
         
     
     def accesspoint_create(self,name,path):
-        data['path'] = path
+        data = { 'path': path }
         r = self.api_call("PUT",  '/' + name.strip('/'), data=json.dumps(data) )
     
     def accesspoint_delete(self,name):
