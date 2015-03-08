@@ -7,7 +7,28 @@ from pprint import pprint
 import sys
 import socket
 
-from .exceptions import ( ConnectionError, ObjectNotFound, APIError )
+from .exceptions import ( ConnectionError, ObjectNotFound, APIError, IsilonLibraryError )
+
+
+class GenToIter(object):
+    ''' Converts a generator object into an iterator so we can use len(results)
+    we do this by passing the total as the first result from our generator function.
+    Also, makes the actual API call on init rather than on the 
+    first next() as with a generator'''
+    
+    def __init__(self,gen):
+        self.gen=gen
+        self.length=gen.next()
+            
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        return self.gen.next()
+   
+    def __len__(self):
+        return self.length
+
 
 class Session(object):
 
@@ -97,42 +118,70 @@ class Session(object):
             if 'application/json' == r.headers['content-type']:
                 return r.json()
         
-        return r
+        return r.text
             
             
             
-    def api_call_resumeable(self,object_name,method,url,**kwargs):
+    def api_call_resumeable(self,method,url,**kwargs):
         ''' Returns a generator, lists through all objects even if it requires multiple API calls '''
-        #initialize state for resuming    
-        last_page = False
-        resume=None
-        
-        #We will loop through as many api calls as needed to retrieve all items
-        while not last_page:
-            #if we have a resume token we need to add it to our params
-            if resume != None:
-                #we can overwrite all other params as resume is the only one needed 
-                kwargs['params'] = {'resume': resume }
+        def _api_call_resumeable(method,url,**kwargs):
+            #initialize state for resuming    
+            object_name = None
+            resume=None
+            total = -1
             
-            #Make API Call
+            #Make First API Call
             try:
-            	data = self.api_call(method, url, **kwargs)
+                data = self.api_call(method, url, **kwargs)
             except ObjectNotFound:
-            	return
-                
-            #Check for a resume token and make sure it's not None
-            last_page=True
-            if 'resume' in data:
-                resume = data['resume']
-                if resume:
-                    last_page=False
+                yield 0
+                return
+        
+        	#Find the object name we are going to iterate, it should be the only array at the top level
+            for k,v in data.items():
+                if isinstance(v,list):
+                    if not object_name is None:
+                        #found two arrays... also this will break this logic
+                        raise IsilonLibraryError("two arrays found in resumeable api call")
+                    object_name = k
+                    
+            if object_name is None:
+                #we can't find the object name, lets throw an exception because this shouldn't happen:
+                raise IsilonLibraryError("no array found in resumable api call")
+        
+        	
+            if 'total' in data:
+                total = data['total']
+            else:
+            	if 'resume' in data and data['resume']:
+            		total = -1
+            	else:
+            		total = len(data[object_name])
+      	
+            yield total
+        
             
+        
+            #We will loop through as many api calls as needed to retrieve all items
+            while True:
+                
+                if object_name in data:    
+                    for obj in data[object_name]:
+                        yield obj
+                else:
+                    raise IsilonLibraryError("expected data object is missing")
+                            
+                #Check for a resume token, is it valid, if so api call the next set of results, else break
+                if 'resume' in data and data['resume']:
+                    kwargs['params'] = {'resume': data['resume'] }
+                    data = self.api_call(method, url, **kwargs) 
+                else:
+                    break
 
-            if object_name in data:    
-                for obj in data[object_name]:
-                    yield obj
-                        
-        return
+            #no more resume tokens          
+            return 
+        
+        return GenToIter(_api_call_resumeable(method,url,**kwargs))      
       
 
     def connect(self):

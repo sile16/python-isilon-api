@@ -11,17 +11,18 @@ may be useful to others working with the API.
 
 ####Tested with:
 
-- OneFS 7.0.2.1
-- Python 2.7.3
-- HTTP Requests 1.2.3
-- Paramiko 1.10.1 (SSH support in order to do file clones)
+- OneFS 7.2
+- Python 2.7.6
+- HTTP Requests 2.5.3
 
 API Features
 ============
 - Automatic Session/Connection management
 - Efficient reuse of HTTP connections
-- Automatic handling of paged directory listing using resume tokens
+- Automatic handling of resume tokens
 - Some basic error handling of sessions
+- Namespace 
+- - 
 
 cp.py Features
 ==============

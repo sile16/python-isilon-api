@@ -30,9 +30,9 @@ class Namespace(object):
         '''add the namespace prefix to the api call'''
         return self.session.api_call(method, self.namespace_url + url,**kwargs)
         
-    def api_call_resumeable(self,object_name,method,url,**kwargs):
+    def api_call_resumeable(self,method,url,**kwargs):
         '''add the namespace prefix to the api call'''
-        return self.session.api_call_resumeable(object_name,method,self.namespace_url + url,**kwargs)
+        return self.session.api_call_resumeable(method,self.namespace_url + url,**kwargs)
            
     def accesspoint(self):
         r = self.api_call("GET", "")
@@ -105,14 +105,21 @@ class Namespace(object):
         
     def file_create(self, path, data, overwrite=False ):
         '''Uploads a file '''
-        headers = { "x-isi-ifs-target-type" : "object" }  
-        return self.api_call("PUT", path , data=data, headers=headers)
+        headers = { "x-isi-ifs-target-type" : "object" , 'content-type' : 'application/octet-stream' }  
+        return self.api_call("PUT", path , data=data, params={'overwrite' : overwrite}, headers=headers)
+    
+    def file(self,path,**kwargs):
+        return self.api_call("GET", path,params=kwargs)
+        
+    def file_delete(self,path):
+        return self.api_call("DELETE", path)
+    
     
 
     def dir(self,path,**kwargs):
         '''Get directory listing'''
         params = self._override({'detail':'type'},kwargs)        
-        for item in self.api_call_resumeable("children","GET", path,params=params):
+        for item in self.api_call_resumeable("GET", path,params=params):
             yield item
         
         return   

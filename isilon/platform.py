@@ -26,9 +26,9 @@ class Platform(object):
         '''add the platform prefix to the api call'''
         return self.session.api_call(method, self.platform_url + url,**kwargs)
         
-    def api_call_resumeable(self,object_name,method,url,**kwargs):
+    def api_call_resumeable(self,method,url,**kwargs):
         '''add the namespace prefix to the api call'''
-        return self.session.api_call_resumeable(object_name,method,self.platform_url + url,**kwargs)
+        return self.session.api_call_resumeable(method,self.platform_url + url,**kwargs)
         
     def snapshot(self,name="",**kwargs):
         '''Get a list of snaps, refer to API docs for other key value pairs accepted as params '''
@@ -37,14 +37,14 @@ class Platform(object):
             try:
                 data =  self.api_call("GET","1/snapshot/snapshots/" + name,params=kwargs)
             except ObjectNotFound:
-                return None
+                return []
                 
             if 'snapshots' in data:
                 return data['snapshots']
-            return None
+            return []
         
         #else we are going to return a generator function          
-        return self.api_call_resumeable('snapshots',"GET","1/snapshot/snapshots/" + name, params=kwargs)
+        return self.api_call_resumeable("GET","1/snapshot/snapshots/" + name, params=kwargs)
         
     def snapshot_create(self,name,path,**kwargs):
         '''Create snapshot'''      
@@ -70,8 +70,10 @@ class Platform(object):
         '''Get a list of quotas, refer to API docs for other key value pairs accepted as params '''
         options={'resolve_names' : True}     
         #else we are going to return a generator function          
-        return self.api_call_resumeable('quotas',"GET","1/quota/quotas/", params=self._override(options,kwargs))
+        return self.api_call_resumeable('GET','1/quota/quotas/', params=self._override(options,kwargs))
 
+    def hdfs_racks(self,**kwargs):
+        return self.api_call_resumeable('GET','1/protocols/hdfs/racks',params=kwargs)
 
        
     def config(self):
