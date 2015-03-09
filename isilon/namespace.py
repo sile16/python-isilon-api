@@ -40,6 +40,7 @@ class Namespace(object):
         data = r['namespaces']
         
         #move all the name, value pairs into an actual dictionary for easy use.
+        
         results = {}
         for x in data:
             results[ x['name'] ] = x['path']

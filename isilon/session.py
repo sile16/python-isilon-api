@@ -128,7 +128,7 @@ class Session(object):
             #initialize state for resuming    
             object_name = None
             resume=None
-            total = -1
+            total = sys.maxint
             
             #Make First API Call
             try:
@@ -154,7 +154,7 @@ class Session(object):
                 total = data['total']
             else:
             	if 'resume' in data and data['resume']:
-            		total = -1
+            		total = sys.maxint
             	else:
             		total = len(data[object_name])
       	
@@ -179,9 +179,14 @@ class Session(object):
                     break
 
             #no more resume tokens          
-            return 
+            return #end of _api_call_resumeable
         
-        return GenToIter(_api_call_resumeable(method,url,**kwargs))      
+        results = GenToIter(_api_call_resumeable(method,url,**kwargs))
+        #for queries that should return a few results just return a list so that full indexing works
+        if len(results) < 10:
+        	return list(results)
+        else:
+        	return results
       
 
     def connect(self):

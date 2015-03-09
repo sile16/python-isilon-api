@@ -29,8 +29,6 @@ class IsilonAPI(unittest.TestCase):
         api = isilon.API(fqdn,user,password)
         self.assertRaises(requests.exceptions.SSLError,api.session.connect)
         
-
-    
     def test_snap_change(self):
         #expire test snaps 60 seconds into the future
         expires = int(time.time()) + 60
@@ -97,8 +95,23 @@ class IsilonAPI(unittest.TestCase):
             
             api.namespace.dir_delete(subfolder)
             
-                
+    def test_access_points(self):
+        api = isilon.API(fqdn,user,password,secure=False)
         
+        #create and get listing again
+        api.namespace.dir_create(testfolder)
+        api.namespace.accesspoint_create(name='test_accesspoint',path=testfolder)
+
+        self.assertEqual( api.namespace.accesspoint()['test_accesspoint'], testfolder)
+        
+        #test acls
+        acl = api.namespace.accesspoint_getacl('test_accesspoint')
+        api.namespace.accesspoint_setacl(name='test_accesspoint',acl=acl)
+        
+        #cleanup
+        api.namespace.accesspoint_delete('test_accesspoint')
+                        
+    
         
        
         

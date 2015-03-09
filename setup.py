@@ -7,6 +7,7 @@ setup(
     author='Matt Robertson',
     author_email='sile16@gmail.com',
     packages=['isilon'],
+    requires=['requests'],
     license='MIT',
     classifiers=(
         'Development Status :: 3 - Alpha',

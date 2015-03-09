@@ -33,17 +33,7 @@ class Platform(object):
     def snapshot(self,name="",**kwargs):
         '''Get a list of snaps, refer to API docs for other key value pairs accepted as params '''
         #if a specific name is specified we want to return a single object
-        if name:
-            try:
-                data =  self.api_call("GET","1/snapshot/snapshots/" + name,params=kwargs)
-            except ObjectNotFound:
-                return []
-                
-            if 'snapshots' in data:
-                return data['snapshots']
-            return []
-        
-        #else we are going to return a generator function          
+       #else we are going to return a generator function          
         return self.api_call_resumeable("GET","1/snapshot/snapshots/" + name, params=kwargs)
         
     def snapshot_create(self,name,path,**kwargs):
