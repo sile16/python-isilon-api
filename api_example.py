@@ -1,7 +1,8 @@
 #API Usage Example
 #==========
 #To use: Modify the fqdn, username, and password
-# Create a directory called /ifs/data/test on your cluster
+
+
 import isilon
 import time
 import logging
@@ -28,11 +29,8 @@ def main():
 	
 		
 	#Check for old bad snaps and delete
-	#Get info for testsnap, will throw exception if not found
 	print("Checking for older snaps")	
-	
 	if api.platform.snapshot('testsnap') :
-		api.session.debug_last()
 		print("We found an existing testsnap, let's delete that...")
 		api.platform.snapshot_delete('testsnap')
 	
@@ -51,6 +49,8 @@ def main():
 	print("Rename back testsnap")
 	api.platform.snapshot_modify('testsnap2',name='testsnap')
 
+	#debug last API call:
+	api.session.debug_last()
 	
 	#list all snaps
 	print('\nListing of All Snaps:')

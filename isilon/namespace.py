@@ -67,7 +67,10 @@ class Namespace(object):
         options = "?acl"
         if nsaccess:
             options += "&nsaccess=true"
-        return self.api_call("GET", path + options)
+        try:
+            return self.api_call("GET", path + options)
+        except ObjectNotFound:
+            return None
 
     def acl_set(self,path,acls,nsaccess=False):
         '''set acl'''
@@ -81,8 +84,11 @@ class Namespace(object):
     def metadata(self,path):
         '''get metadata'''        
         options = "?metadata"
+        try:
+            data = self.api_call("GET", path + options)
+        except ObjectNotFound:
+            return None
         
-        data = self.api_call("GET", path + options)
         if not 'attrs' in data:
             return None
         data = data['attrs']
@@ -98,11 +104,13 @@ class Namespace(object):
         pass
         
                     
-    def file_copy(self,src_path, dst_path, clone=False):
+    def file_copy(self,src_path, dst_path, clone=False, snapshot=None):
         '''Copy a file''' 
         options={'clone' : clone}
+        if clone and snapshot:
+            options['snapshot'] =  snapshot
         headers = { "x-isi-ifs-copy-source" :  "/namespace" + src_path }    
-        return self.api_call("PUT", self.namespace_url + dst_path, params=options, headers=headers)
+        return self.api_call("PUT", dst_path, params=options, headers=headers)
         
     def file_create(self, path, data, overwrite=False ):
         '''Uploads a file '''
@@ -110,7 +118,10 @@ class Namespace(object):
         return self.api_call("PUT", path , data=data, params={'overwrite' : overwrite}, headers=headers)
     
     def file(self,path,**kwargs):
-        return self.api_call("GET", path,params=kwargs)
+        try:
+            return self.api_call("GET", path,params=kwargs)
+        except ObjectNotFound:
+            return None
         
     def file_delete(self,path):
         return self.api_call("DELETE", path)
@@ -120,14 +131,18 @@ class Namespace(object):
     def dir(self,path,**kwargs):
         '''Get directory listing'''
         params = self._override({'detail':'type'},kwargs)        
-        for item in self.api_call_resumeable("GET", path,params=params):
-            yield item
-        
-        return   
-        
+        #Resumable catches object not found a returns an empty list
+        return self.api_call_resumeable("GET", path,params=params)
+          
+    def exists(self,path):
+        if self.metadata(path):
+            return True
+        return False
+    
     def is_dir(self,path):
         metadata = self.metadata(path)
-        if 'type' in metadata and metadata['type'] == "container" :
+        
+        if metadata and 'type' in metadata and metadata['type'] == "container" :
             return True
         return False
 
