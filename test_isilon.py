@@ -31,7 +31,7 @@ class IsilonAPI(unittest.TestCase):
         
     def test_snap_change(self):
         #expire test snaps 60 seconds into the future
-        expires = int(time.time()) + 60
+        expires = int(time.time()) + 600
         api = isilon.API(fqdn,user,password,secure=False)
         api.platform.snapshot_create(testsnap,"/ifs/data",expires=expires)
         self.assertGreater(len(api.platform.snapshot(testsnap)),0)

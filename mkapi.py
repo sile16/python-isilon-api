@@ -26,12 +26,15 @@ def main():
             data1 = api.session.api_call("GET","/platform" + dir + "?describe&json")
 
            # print(data1)
+           
             if not data1 is None:
                 for k in data1:  
                     all_keys[k] = True
     
     
             all_args = dir + '  Props: '
+            
+            #cloud api's don't have docs yeti
             if (not data1 is None):
                 for key in data1:
                     if args.method .upper() in key.upper() and 'properties' in data1[key]:
