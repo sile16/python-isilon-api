@@ -16,13 +16,9 @@ testfolder = '/ifs/apitest_' + str(int(time.time()))
 testsnap = 'apitest_snap' + str(int(time.time()))
 
 class IsilonAPI(unittest.TestCase):
-
-    
-
     def setUp(self):
         pass
         #self.api = isilon.API(fqdn,user,password,secure=False)
-
     
     
     def test_bad_ssl_cert(self):
